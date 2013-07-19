@@ -1,4 +1,4 @@
-![Railway turntable and roundhouse](icon.png)
+[![Railway turntable and roundhouse](icon.png)](http://commons.wikimedia.org/wiki/File:Train_roundhose_1909.jpg)
 
 # Git Dispatcher [![Build Status](https://travis-ci.org/whiskeysierra/git-dispatcher.png?branch=master)](http://travis-ci.org/whiskeysierra/git-dispatcher)
 
