@@ -25,8 +25,7 @@ args = parser.parse_args()
 
 repo = git.Repo()
 root = repo.working_dir
-# TODO change to git-hooks.git
-remote = 'git@github.com:whiskeysierra/git-hooks-dispatcher.git'
+remote = 'git@github.com:whiskeysierra/git-hooks.git'
 local = '.git-hooks'
 
 subtree = os.path.join(root, local)
