@@ -6,19 +6,169 @@ from __future__ import print_function, unicode_literals
 import argcomplete
 import argparse
 import git
+import os
+import shutil
+import sys
+
+from clint.textui import colored
 
 parser = argparse.ArgumentParser(description='')
-
 commands = parser.add_subparsers()
-
-install_command = commands.add_parser('install')
-activate_command = commands.add_parser('activate')
-deactivate_command = commands.add_parser('deactivate')
-uninstall_command = commands.add_parser('uninstall')
+commands.add_parser('install').set_defaults(command='install')
+commands.add_parser('update').set_defaults(command='update')
+commands.add_parser('uninstall').set_defaults(command='uninstall')
+commands.add_parser('activate').set_defaults(command='activate')
+commands.add_parser('deactivate').set_defaults(command='deactivate')
 
 argcomplete.autocomplete(parser)
 args = parser.parse_args()
 
 repo = git.Repo()
+root = repo.working_dir
+# TODO change to git-hooks.git
+remote = 'git@github.com:whiskeysierra/git-hooks-dispatcher.git'
+local = '.git-hooks'
 
-print(repo.active_branch)
+subtree = os.path.join(root, local)
+dispatcher = os.path.join(subtree, 'dispatcher.py')
+hooks_directory = os.path.join(root, '.git', 'hooks')
+
+hooks = [
+    'applypatch-msg',
+    'pre-applypatch',
+    'post-applypatch',
+    'pre-commit',
+    'prepare-commit-msg',
+    'commit-msg',
+    'post-commit',
+    'pre-rebase',
+    'post-checkout',
+    'post-merge',
+    'pre-receive',
+    'update',
+    'post-receive',
+    'post-update',
+    'pre-auto-gc',
+    'post-rewrite',
+]
+
+
+def log(s):
+    sys.stdout.write(s + ' ')
+    sys.stdout.flush()
+
+
+def log_result(r='done', color=colored.green):
+    sys.stdout.write('[%s]' % color(r) + '\n')
+
+
+def relativize(path):
+    return os.path.relpath(path, root)
+
+
+def install():
+    if os.path.exists(subtree):
+        raise IOError("%s already exists", local)
+
+    log('Installing git-hooks into %s' % local)
+    repo.git.subtree('add', '--prefix', local, '--squash', remote, 'master')
+    log_result()
+
+    config = repo.config_writer(config_level='repository')
+
+    log("Adding alias 'hooks' to this repository")
+    if config.has_option('alias', 'hooks'):
+        log_result('existed', color=colored.yellow)
+    else:
+        config.set('alias', 'hooks', '!.git-hooks/git-hooks')
+        log_result()
+
+
+def update():
+    if not os.path.exists(subtree):
+        raise IOError("%s does not exists", local)
+
+    repo.git.subtree('pull', '--prefix', local, '--squash', remote, 'master')
+    print("Updated '%s'." % local)
+
+
+def uninstall():
+    if not os.path.exists(subtree):
+        raise IOError("%s does not exists", local)
+
+    shutil.rmtree(subtree)
+    print("Removed '%s'. Don't forget to commit your changes." % subtree)
+
+    config = repo.config_writer(config_level='repository')
+
+    if config.has_option('alias', 'hooks'):
+        config.remove_option('alias', 'hooks')
+        print("Removed alias 'hooks' for this repository.")
+
+
+def activate():
+    for hook in hooks:
+        target = os.path.join(hooks_directory, hook)
+
+        if os.path.islink(target) and os.path.realpath(target) == dispatcher:
+            # we can savely assume, we created it in the first place
+            os.unlink(target)
+
+        if os.path.exists(target):
+            # exists and is not one of our symlinks, leave it alone!
+            state = colored.yellow('exists')
+        else:
+            try:
+                os.symlink(dispatcher, target)
+                state = colored.green('done')
+            except OSError:
+                state = colored.red('failed')
+
+        print('Linking %s to %s [%s]' % (relativize(dispatcher), relativize(target), state))
+
+
+def deactivate():
+    for hook in hooks:
+        target = os.path.join(hooks_directory, hook)
+
+        if os.path.islink(target) and os.path.realpath(target) == dispatcher:
+            try:
+                # we can savely assume, we created it in the first place
+                os.unlink(target)
+                state = colored.green('done')
+            except OSError:
+                state = colored.red('failed')
+        else:
+            # exists and is not one of our symlinks, leave it alone!
+            state = colored.yellow('skipped')
+
+        print('Unlinking %s [%s]' % (relativize(target), state))
+
+
+actions = {
+    'install': install,
+    'update': update,
+    'uninstall': uninstall,
+    'activate': activate,
+    'deactivate': deactivate,
+}
+
+
+def unknown():
+    raise RuntimeError("Unknown command '%s'" % args.command)
+
+
+action = actions.get(args.command, unknown)
+
+
+def on_error(message):
+    sys.stderr.write(str(message) + '\n')
+    sys.exit(1)
+
+
+try:
+    action()
+except git.exc.GitCommandError, e:
+    on_error(e.stderr)
+except Exception, e:
+    on_error(e)
