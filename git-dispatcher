@@ -28,11 +28,13 @@ def parse():
     commands = parser.add_subparsers()
 
     if not os.path.exists(subtree):
-        commands.add_parser('install').set_defaults(command='install')
+        install = commands.add_parser('install')
+        install.set_defaults(command='install')
+        install.add_argument('version', nargs='?', default='master')
     else:
         update = commands.add_parser('update')
         update.set_defaults(command='update')
-        update.add_argument('version', default='master')
+        update.add_argument('version', nargs='?', default='master')
 
         commands.add_parser('uninstall').set_defaults(command='uninstall')
 
@@ -65,8 +67,8 @@ def install():
     if os.path.exists(subtree):
         raise IOError("%s already exists" % local)
 
-    log('Installing git-hooks into %s' % local)
-    repo.git.subtree('add', '--prefix', local, '--squash', remote, 'master')
+    log('Installing %s (%s) into %s' % (remote, args.version, local))
+    repo.git.subtree('add', '--prefix', local, '--squash', remote, args.version)
     log_result()
 
     config = repo.config_writer(config_level='repository')
@@ -87,8 +89,8 @@ def update():
     if not os.path.exists(subtree):
         raise IOError("%s does not exists" % local)
 
-    log("Updating '%s' with %s" % (local, remote))
-    repo.git.subtree('pull', '--prefix', local, '--squash', remote, 'master')
+    log("Updating %s with %s (%s)" % (local, remote, args.version))
+    repo.git.subtree('pull', '--prefix', local, '--squash', remote, args.version)
     log_result()
 
 
