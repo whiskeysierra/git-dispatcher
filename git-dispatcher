@@ -29,8 +29,7 @@ def parse():
 
     if not os.path.exists(subtree):
         commands.add_parser('install').set_defaults(command='install')
-
-    if os.path.exists(subtree):
+    else:
         update = commands.add_parser('update')
         update.set_defaults(command='update')
         update.add_argument('version', default='master')
