@@ -10,26 +10,8 @@ import os
 import shutil
 import sys
 
-from clint.textui.colored import yellow, red, green
+from clint.textui.colored import yellow, green
 
-
-def parse():
-    parser = argparse.ArgumentParser(description='')
-    commands = parser.add_subparsers()
-    commands.add_parser('install').set_defaults(command='install')
-
-    update = commands.add_parser('update')
-    update.set_defaults(command='update')
-    update.add_argument('version', default='master')
-
-    commands.add_parser('uninstall').set_defaults(command='uninstall')
-    commands.add_parser('activate').set_defaults(command='activate')
-    commands.add_parser('deactivate').set_defaults(command='deactivate')
-
-    argcomplete.autocomplete(parser)
-    return parser.parse_args()
-
-args = parse()
 repo = git.Repo()
 root = repo.working_dir
 remote = 'git@github.com:whiskeysierra/git-hooks.git'
@@ -39,6 +21,32 @@ subtree = os.path.join(root, local)
 dispatcher = os.path.join(subtree, 'dispatcher.py')
 manage = os.path.join(subtree, 'manage.py')
 hooks_directory = os.path.join(root, '.git', 'hooks')
+
+
+def parse():
+    parser = argparse.ArgumentParser(description='')
+    commands = parser.add_subparsers()
+
+    if not os.path.exists(subtree):
+        commands.add_parser('install').set_defaults(command='install')
+
+    if os.path.exists(subtree):
+        update = commands.add_parser('update')
+        update.set_defaults(command='update')
+        update.add_argument('version', default='master')
+
+        commands.add_parser('uninstall').set_defaults(command='uninstall')
+
+        # TODO only show if not already linked
+        commands.add_parser('activate').set_defaults(command='activate')
+
+        # TODO only show if already linked
+        commands.add_parser('deactivate').set_defaults(command='deactivate')
+
+    argcomplete.autocomplete(parser)
+    return parser.parse_args()
+
+args = parse()
 
 
 def log(s):
@@ -65,10 +73,14 @@ def install():
     config = repo.config_writer(config_level='repository')
 
     log("Adding alias 'hooks' to this repository")
+
+    if not config.has_section('alias'):
+        config.add_section('alias')
+
     if config.has_option('alias', 'hooks'):
         log_result('existed', color=yellow)
     else:
-        config.set('alias', 'hooks', '!.git-hooks/git-hooks')
+        config.set('alias', 'hooks', '!.git-hooks/mange.py')
         log_result()
 
 
