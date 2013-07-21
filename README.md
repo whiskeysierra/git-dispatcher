@@ -1,4 +1,6 @@
-# ![](icon.png) Git Dispatcher [![Build Status](https://travis-ci.org/whiskeysierra/git-dispatcher.png?branch=master)](http://travis-ci.org/whiskeysierra/git-dispatcher)
+[![Railway turntable and roundhouse](icon.png)](http://commons.wikimedia.org/wiki/File:Train_roundhose_1909.jpg)
+
+# Git Dispatcher [![Build Status](https://travis-ci.org/whiskeysierra/git-dispatcher.png?branch=master)](http://travis-ci.org/whiskeysierra/git-dispatcher)
 
 ## Requirements
 
@@ -12,9 +14,9 @@ To install the required python libraries run:
 
 
 
-## Attributions/Links
-The Grappling Hook icon was found on [http://ztreasureisle.wikia.com/](http://ztreasureisle.wikia.com/wiki/File:NinjaGear_Grappling_Hook-icon.png).
+## Attributions
+![Public Domain](http://i.creativecommons.org/p/mark/1.0/80x15.png)
+The train roundhouse photo from [Wikimedia Commons](http://commons.wikimedia.org/wiki/File:Train_roundhose_1909.jpg) is in the
+[Public Domain](http://en.wikipedia.org/wiki/public_domain).
 
-A good tutorial on the `git subtree` command can be found 
-[here](http://blogs.atlassian.com/2013/05/alternatives-to-git-submodule-git-subtree/).
 
