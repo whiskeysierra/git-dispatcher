@@ -1,3 +1,2 @@
-argcomplete
 clint
 gitpython
