@@ -79,6 +79,7 @@ def install():
     else:
         log_result('existed', color=yellow)
 
+
 def update():
     if not os.path.exists(local):
         raise IOError("%s does not exists" % prefix)
