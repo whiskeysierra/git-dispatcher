@@ -1,9 +1,7 @@
 #!/usr/bin/env python
-# PYTHON_ARGCOMPLETE_OK
 
 from __future__ import print_function, unicode_literals
 
-import argcomplete
 import argparse
 import git
 import os
@@ -36,7 +34,6 @@ def parse():
     deactivate = commands.add_parser('deactivate')
     deactivate.set_defaults(command='deactivate')
 
-    argcomplete.autocomplete(parser)
     return parser.parse_args()
 
 
